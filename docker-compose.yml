@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  avatar-app:
+    build: .
+    container_name: dxc-avatar
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      - ./public:/usr/src/app/public
+      - ./server.js:/usr/src/app/server.js
+    networks:
+      - avatar-network
+
+networks:
+  avatar-network:
+    driver: bridge

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DXC Avatar Chat</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom styles -->
+    <link href="./css/styles.css" rel="stylesheet">
+    <!-- Azure Speech SDK -->
+    <script src="https://aka.ms/csspeech/jsbrowserpackageraw"></script>
+    <script src="./js/chat.js?ver=2"></script>
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+    <!-- DXC Logo (positioned absolutely to the viewport) -->
+    <div class="fixed left-4 top-4 z-50">
+        <img src="./image/DXC1.png" alt="DXC Logo" class="h-16 w-auto">
+    </div>
+
+    <div class="fixed right-10 top-7 z-50">
+        <div class="text-right">
+            <h1 class="text-3xl font-bold text-purple-700">DATA & AI</h1>
+        </div>
+    </div>
+    
+    <div class="max-w-5xl mx-auto px-4 pt-24">
+        <!-- Header -->
+        <div class="mb-8">
+            <div class="text-center">
+                <h1 class="text-3xl font-bold text-purple-700">Digital Human Avatar</h1>
+            </div>
+        </div>
+
+        <!-- Configuration (hidden by default) -->
+        <div id="configuration" class="hidden bg-white rounded-lg shadow-md p-6 mb-8 border border-gray-200">
+            <div class="space-y-4">
+                <!-- Hidden elements for backward compatibility -->
+                <div class="hidden">
+                    <input id="sttLocales" type="hidden" value="">
+                    <input id="ttsVoice" type="hidden" value="">
+                    <input id="customVoiceEndpointId" type="hidden" value="">
+                    <input type="checkbox" id="continuousConversation" checked>
+                    <input id="talkingAvatarCharacter" type="hidden" value="">
+                    <input id="talkingAvatarStyle" type="hidden" value="">
+                    <input type="checkbox" id="customizedAvatar">
+                    <input type="checkbox" id="useBuiltInVoice">
+                    <input type="checkbox" id="autoReconnectAvatar">
+                    <input type="checkbox" id="showSubtitles">
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                    <input type="checkbox" id="useLocalVideoForIdle" onchange="window.updateLocalVideoForIdle()" class="rounded text-indigo-600">
+                    <label for="useLocalVideoForIdle" class="text-gray-700">Use Local Video for Idle</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex flex-col items-center w-full space-y-6">
+            <!-- Video Container -->
+            <div class="w-full bg-white rounded-lg shadow-lg overflow-hidden">
+                <div class="relative w-full" style="padding-bottom: 53.75%; height: 0; overflow: hidden;">
+                    <div id="remoteVideo" class="absolute top-0 left-0 w-full h-full bg-black">
+                        <!-- Video will be inserted here by JavaScript -->
+                    </div>
+                    <div id="localVideo" class="absolute bottom-4 right-4 w-1/4 rounded-lg overflow-hidden shadow-lg hidden bg-gray-800" style="z-index: 10;">
+                        <div class="w-full h-full flex items-center justify-center text-white text-sm">
+                            Local Video Placeholder
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Control Buttons -->
+            <div class="flex flex-wrap gap-4 justify-center w-full mt-4">
+                <button id="startSession" 
+                        onclick="window.startSession()" 
+                        class="px-6 py-3 bg-[#7d2fd0] text-white rounded-full hover:bg-[#0067b3] hover:opacity-50 transition-colors shadow-md font-medium">
+                    Talk to Dixie
+                </button>
+                <button id="toggleMute" 
+                        class="px-6 py-3 bg-[#7d2fd0] text-white rounded-full hover:bg-[#0067b3] hover:opacity-50 transition-colors shadow-md font-medium">
+                    <i class="fas fa-volume-up"></i> <span class="mute-text">Mute</span>
+                </button>
+                <button id="microphone"
+                        onclick="window.microphone()"
+                        disabled
+                        class="px-6 py-3 bg-[#7d2fd0] text-white rounded-full hover:bg-[#0067b3] hover:opacity-50 transition-colors shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                    Start Microphone
+                </button>
+                <!--<button id="triggerResponse"
+                        onclick="triggerRealtimeResponse()"
+                        disabled
+                        class="px-6 py-3 bg-green-600 text-white rounded-full hover:bg-green-700 transition-colors shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                    Send (Space)
+                </button>-->
+                <button id="stopSpeaking" 
+                        onclick="stopSpeaking()" 
+                        disabled
+                        class="px-6 py-3 bg-[#7d2fd0] text-white rounded-full hover:bg-[#0067b3] hover:opacity-50 transition-colors shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                    Interrupt
+                </button>
+                <button id="stopSession" 
+                        onclick="window.stopSession()" 
+                        disabled
+                        class="px-6 py-3 bg-[#7d2fd0] text-white rounded-full hover:bg-[#0067b3] hover:opacity-50 transition-colors shadow-md font-medium disabled:opacity-50 disabled:cursor-not-allowed">
+                    Close Session
+                </button>
+            </div>
+
+            <!-- Chat Interface -->
+            <div class="w-full max-w-2xl mx-auto">
+                <!-- Chat History -->
+                <div id="chatHistory"
+                     class="w-full bg-white rounded-lg shadow-md p-6 mb-4 overflow-y-auto text-gray-900 hidden"
+                     style="min-height: 200px; max-height: 400px; border: 1px solid #e2e8f0;">
+                    <!-- Chat messages will appear here -->
+                </div>
+
+                <!-- Message Input -->
+                <div id="userMessageBox"
+                     class="w-full bg-white rounded-lg shadow-md p-6 mb-4 overflow-y-auto hidden text-gray-900"
+                     contentEditable="true"
+                     placeholder="Type your message here..."
+                     style="min-height: 120px; border: 1px solid #e2e8f0;">
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <footer class="fixed bottom-0 left-0 w-full bg-gray-100 py-3 border-t border-gray-200">
+        <div class="max-w-5xl mx-auto px-4 flex justify-between items-center text-gray-600 text-sm">
+            <div> 2025 DXC Technology. All rights reserved.</div>
+            <div class="text-right">
+                <span class="inline-flex items-center">
+                    <span class="mr-1">Powered by</span>
+                    <span class="font-medium text-purple-700">Azure Open AI</span>
+                </span>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

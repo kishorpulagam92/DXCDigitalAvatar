@@ -1,0 +1,20 @@
+# Core web framework
+aiohttp
+
+# Azure SDK dependencies
+azure-core>=1.24.0
+azure-identity>=1.12.0
+azure-storage-blob
+
+# Environment configuration
+python-dotenv>=0.19.0
+
+
+
+# Logging (built-in to Python, no need to install)
+# pathlib (built-in to Python 3.4+)
+# asyncio (built-in to Python 3.4+)
+# json (built-in to Python)
+# enum (built-in to Python 3.4+)
+# typing (built-in to Python 3.5+)
+# os (built-in to Python)
