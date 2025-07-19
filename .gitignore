@@ -72,12 +72,79 @@ web_modules/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variable files
-.env
-.env.development.local
-.env.test.local
-.env.production.local
-.env.local
+# dotenv environment variable files and secrets
+.env*
+*.env*
+.envrc
+secrets.*
+*.secrets*
+*.key
+*.pem
+*.crt
+*.pfx
+*.cert
+*.private
+*.token
+*.config.local
+*.settings
+
+# VSCode and JetBrains IDE config
+.vscode/
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Python virtual environments and caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Node.js and npm/yarn/pnpm caches
+node_modules/
+.npm/
+.pnpm/
+.yarn/
+
+# Build, dist, and coverage
+build/
+dist/
+coverage/
+.nyc_output/
+*.egg-info/
+.eggs/
+*.egg
+*.whl
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs and reports
+logs/
+*.log
+*.pid
+*.seed
+*.pid.lock
+*.tgz
+*.gz
+*.zip
+*.bak
+*.tmp
+
+# Editor swap/backup files
+*.swp
+*.swo
+*~
+
+# Ignore all config except tracked ones
+!requirements.txt
+!Dockerfile
+!README.md
+!docker-compose.yml
+!*.md
+!*.txt
 
 # parcel-bundler cache (https://parceljs.org/)
 .cache

@@ -5,6 +5,7 @@ Dockerfile
 .git
 .gitignore
 .vscode
+.venv
 *.md
 *.pdf
 *.docx

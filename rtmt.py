@@ -8,6 +8,7 @@ import aiohttp
 from aiohttp import web
 from azure.core.credentials import AzureKeyCredential
 from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+from azure_search_rag import AzureCognitiveSearchRAG
 
 logger = logging.getLogger("voicerag")
 
@@ -76,8 +77,50 @@ class RTMiddleTier:
         else:
             self._token_provider = get_bearer_token_provider(credentials, "https://cognitiveservices.azure.com/.default")
             self._token_provider() # Warm up during startup so we have a token cached when the first request arrives
+        # Instantiate Azure Cognitive Search RAG helper
+        self.rag_helper = AzureCognitiveSearchRAG()
+
+    def rag_retrieve(self, query: str, top: int = 3):
+        """
+        Retrieve relevant documents from Azure Cognitive Search for RAG.
+        Returns a list of dicts with keys: id, content, title.
+        """
+        return self.rag_helper.retrieve_documents(query, top=top)
 
     async def _process_message_to_client(self, msg: str, client_ws: web.WebSocketResponse, server_ws: web.WebSocketResponse) -> Optional[str]:
+        # RAG augmentation: intercept user message and retrieve knowledge
+        message = json.loads(msg.data)
+        updated_message = msg.data
+        if message.get("type") == "conversation.input" and "item" in message and message["item"].get("role") == "user":
+            user_content = message["item"].get("content", "")
+            if isinstance(user_content, list):
+                # If multimodal, extract text part
+                user_text = " ".join([c.get("text", "") for c in user_content if isinstance(c, dict) and c.get("type") == "text"])
+            else:
+                user_text = user_content
+            logger.info(f"[RAG DEBUG] Triggered for user_text: {user_text}")
+            # Retrieve RAG documents
+            rag_results = self.rag_retrieve(user_text, top=3)
+            logger.info(f"[RAG DEBUG] rag_results: {rag_results}")
+            if rag_results:
+                # Format retrieved docs as context
+                context_lines = []
+                for i, doc in enumerate(rag_results, 1):
+                    context_lines.append(f"[Source {i}] {doc['content']}")
+                    if doc.get('people'):
+                        context_lines.append(f"  People: {', '.join(doc['people'])}")
+                    if doc.get('organizations'):
+                        context_lines.append(f"  Organizations: {', '.join(doc['organizations'])}")
+                    if doc.get('locations'):
+                        context_lines.append(f"  Locations: {', '.join(doc['locations'])}")
+                    if doc.get('keyphrases'):
+                        context_lines.append(f"  Keyphrases: {', '.join(doc['keyphrases'])}")
+                context_block = "\n".join(context_lines)
+                logger.info(f"[RAG DEBUG] context_block:\n{context_block}")
+                # Prepend to user message content
+                message["item"]["content"] = f"Knowledge retrieved from search:\n{context_block}\n\nUser message: {user_text}"
+            updated_message = json.dumps(message)
+
         message = json.loads(msg.data)
         updated_message = msg.data
         if message is not None:
@@ -86,7 +129,12 @@ class RTMiddleTier:
                     session = message["session"]
                     # Hide the instructions, tools and max tokens from clients, if we ever allow client-side 
                     # tools, this will need updating
-                    session["instructions"] = ""
+                    # Explicitly instruct the model to use the knowledge block
+                    session["instructions"] = (
+                        "If there is a block of knowledge retrieved from search at the beginning of the user message, ALWAYS use it as your primary source for answering the user's question. "
+                        "Base your answer on this knowledge as much as possible, and cite or reference it if relevant. If the knowledge block does not contain the answer, say so explicitly. "
+                        "Do not make up information that is not present in the provided knowledge block."
+                    )
                     session["tools"] = []
                     session["voice"] = self.voice_choice
                     session["tool_choice"] = "none"
