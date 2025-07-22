@@ -176,7 +176,7 @@ RESPONSE INSTRUCTIONS:
 
             # Realtime API Configuration
             # 'realtimeEndpoint': f"ws://localhost:5000/realtime",  # WebSocket endpoint for realtime API
-            'realtimeEndpoint': "wss://digital-human-avatar-realtime-api-a3e2hcdxf6bcdga7.eastus-01.azurewebsites.net/realtime",
+            'realtimeEndpoint': "wss://dxcdigitalavatar-gme8cna3cbbagwa2.centralus-01.azurewebsites.net/realtime",
             'azureOpenAiEndpoint': os.environ.get('AZURE_OPENAI_ENDPOINT', ''),
             'azureOpenAiApiKey': os.environ.get('AZURE_OPENAI_API_KEY', ''),
             'azureOpenAiDeployment': os.environ.get('AZURE_OPENAI_REALTIME_DEPLOYMENT', ''),
@@ -218,3 +218,6 @@ if __name__ == "__main__":
     host = "0.0.0.0"
     port = 5000
     web.run_app(create_app(), host=host, port=port)
+    # host = "localhost"
+    # port = 8765
+    # web.run_app(create_app(), host=host, port=port)

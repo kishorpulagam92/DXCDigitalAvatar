@@ -111,8 +111,8 @@ function connectAvatar() {
 // Connect to realtime API WebSocket
 function connectRealtimeAPI() {
     try {
-        const realtimeEndpoint = azureConfig.realtimeEndpoint || 'ws://localhost:8765/realtime';
-        //const realtimeEndpoint = azureConfig.realtimeEndpoint || 'wss://digital-human-avatar-realtime-api-a3e2hcdxf6bcdga7.eastus-01.azurewebsites.net/realtime';
+        //const realtimeEndpoint = azureConfig.realtimeEndpoint || 'ws://localhost:8765/realtime';
+        const realtimeEndpoint = azureConfig.realtimeEndpoint || 'wss://dxcdigitalavatar-gme8cna3cbbagwa2.centralus-01.azurewebsites.net/realtime';
         console.log('Connecting to realtime API:', realtimeEndpoint);
         realtimeWebSocket = new WebSocket(realtimeEndpoint);
 
